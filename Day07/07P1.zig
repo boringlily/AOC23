@@ -85,7 +85,7 @@ fn getHandType(cards: [5]u8) HandType {
     } else if (std.meta.eql(count, [5]u8{ 2, 2, 1, 0, 0 })) {
         return HandType.two_pair;
     } else if (std.meta.eql(count, [5]u8{ 2, 1, 1, 1, 0 })) {
-        return HandType.two_pair;
+        return HandType.one_pair;
     } else {
         return HandType.high_card;
     }
@@ -122,11 +122,11 @@ fn cmpHandByScore(context: void, a: Hand, b: Hand) bool {
 
     if (at == bt) {
         for (0..5) |i| {
-            if (a.cards[i] == b.cards[i]) {
+            if (a.card_values[i] == b.card_values[i]) {
                 continue;
-            } else if (a.cards[i] < b.cards[i]) {
+            } else if (a.card_values[i] < b.card_values[i]) {
                 return true;
-            } else if (a.cards[i] > b.cards[i]) {
+            } else if (a.card_values[i] > b.card_values[i]) {
                 return false;
             } else {}
         }
@@ -160,9 +160,10 @@ fn getWinnings(readDemo: bool) !u64 {
     std.sort.insertion(Hand, x, {}, cmpHandByScore);
 
     for (x, 0..) |item, index| {
-        std.debug.print("\nHand: {s} Cards: {any}  Bet: {d}\n", .{ @tagName(item.type), item.cards, item.bet });
-        winnings += (item.bet * (index + 1));
+        std.debug.print("\nHand: {s} Cards: {s}  Bet: {d}, card values: {any}, i:{d}\n", .{ @tagName(item.type), item.cards, item.bet, item.card_values, index + 1 });
+        winnings += (item.bet *% (index + 1));
     }
+
     std.debug.print("winnings: {d}\n", .{winnings});
     return winnings;
 }
