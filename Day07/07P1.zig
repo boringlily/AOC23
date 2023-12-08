@@ -11,22 +11,19 @@ const HandType = enum(u32) {
     five_kind,
 };
 
-const Hand = struct { cards: [5]u8, value: u32, bet: u32, type: HandType, score: u32 };
+const Hand = struct {
+    cards: [5]u8,
+    bet: u32,
+    type: HandType,
+};
 
 fn readHand(line: []const u8) Hand {
     const cards: [5]u8 = line[0..5].*;
     const bet: []const u8 = line[6..];
     std.debug.print("\n cards:{s} bet {s}\n", .{ cards, bet });
 
-    var hand = Hand{
-        .cards = cards,
-        .value = getHandValue(cards),
-        .bet = getBetValue(bet),
-        .type = getHandType(cards),
-        .score = 0,
-    };
+    var hand = Hand{ .cards = getCardsArray(cards), .bet = getBetValue(bet), .type = getHandType(cards) };
 
-    hand.score = hand.value * @as(u32, @intFromEnum(hand.type));
     std.debug.print("hand {any}\n", .{hand});
     return hand;
 }
@@ -90,12 +87,12 @@ fn getHandType(cards: [5]u8) HandType {
     }
 }
 
-fn getHandValue(cards: [5]u8) u32 {
-    var sum: u32 = 0;
-    for (cards) |c| {
-        sum += cardValue(c);
+fn getCardsArray(cards: [5]u8) [5]u8 {
+    var out: [5]u8 = undefined;
+    for (cards, 0..) |c, i| {
+        out[i] = cardValue(c);
     }
-    return sum;
+    return out;
 }
 
 fn cardValue(card: u8) u8 {
@@ -116,7 +113,21 @@ fn cardValue(card: u8) u8 {
 
 fn cmpHandByScore(context: void, a: Hand, b: Hand) bool {
     _ = context;
-    if (a.score < b.score) {
+    const at: u32 = @intFromEnum(a.type);
+    const bt: u32 = @intFromEnum(b.type);
+
+    if (at == bt) {
+        for (0..5) |i| {
+            if (a.cards[i] == b.cards[i]) {
+                continue;
+            } else if (a.cards[i] < b.cards[i]) {
+                return true;
+            } else if (a.cards[i] > b.cards[i]) {
+                return false;
+            } else {}
+        }
+    }
+    if (at < bt) {
         return true;
     } else {
         return false;
@@ -136,7 +147,7 @@ fn getWinnings(readDemo: bool) !u64 {
     var hand_buffer = std.ArrayList(Hand).init(allocator);
     defer hand_buffer.deinit();
 
-    var buf: [100]u8 = undefined;
+    var buf: [20]u8 = undefined;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         try hand_buffer.append(readHand(line));
     }
@@ -145,7 +156,7 @@ fn getWinnings(readDemo: bool) !u64 {
     std.sort.insertion(Hand, x, {}, cmpHandByScore);
 
     for (x, 0..) |item, index| {
-        std.debug.print("{d} {s} {d}\n", .{ item.score, item.cards, item.bet });
+        std.debug.print("\nHand: {s} Cards: {any}  Bet: {d}\n", .{ @tagName(item.type), item.cards, item.bet });
         winnings += (item.bet * (index + 1));
     }
     std.debug.print("winnings: {d}\n", .{winnings});
