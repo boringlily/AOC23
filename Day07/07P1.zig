@@ -13,6 +13,7 @@ const HandType = enum(u32) {
 
 const Hand = struct {
     cards: [5]u8,
+    card_values: [5]u8,
     bet: u32,
     type: HandType,
 };
@@ -20,11 +21,14 @@ const Hand = struct {
 fn readHand(line: []const u8) Hand {
     const cards: [5]u8 = line[0..5].*;
     const bet: []const u8 = line[6..];
-    std.debug.print("\n cards:{s} bet {s}\n", .{ cards, bet });
 
-    var hand = Hand{ .cards = getCardsArray(cards), .bet = getBetValue(bet), .type = getHandType(cards) };
+    var hand = Hand{
+        .cards = cards,
+        .card_values = getCardsArray(cards),
+        .bet = getBetValue(bet),
+        .type = getHandType(cards),
+    };
 
-    std.debug.print("hand {any}\n", .{hand});
     return hand;
 }
 
@@ -164,7 +168,7 @@ fn getWinnings(readDemo: bool) !u64 {
 }
 
 pub fn main() !void {
-    const winnings = getWinnings(false);
+    const winnings = try getWinnings(false);
     _ = winnings;
 }
 
