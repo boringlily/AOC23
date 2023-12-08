@@ -15,18 +15,40 @@ const Hand = struct { cards: [5]u8, value: u32, bet: u32, type: HandType, score:
 
 fn readHand(line: []const u8) Hand {
     const cards: [5]u8 = line[0..5].*;
+    const bet: []const u8 = line[6..];
+    std.debug.print("\n cards:{s} bet {s}\n", .{ cards, bet });
 
     var hand = Hand{
         .cards = cards,
         .value = getHandValue(cards),
-        .bet = 0,
-        .type = HandType.one_pair,
+        .bet = getBetValue(bet),
+        .type = getHandType(cards),
         .score = 0,
     };
 
     hand.score = hand.value * @as(u32, @intFromEnum(hand.type));
     std.debug.print("hand {any}\n", .{hand});
     return hand;
+}
+
+fn getBetValue(str: []const u8) u32 {
+    var bet: u32 = 0;
+
+    for (str) |c| {
+        switch (c) {
+            '0'...'9' => {
+                bet = (bet * 10) + (c - '0');
+            },
+            else => {},
+        }
+    }
+    return bet;
+}
+
+fn getHandType(cards: [5]u8) HandType {
+    _ = cards;
+
+    return HandType.high_card;
 }
 
 fn getHandValue(cards: [5]u8) u32 {
