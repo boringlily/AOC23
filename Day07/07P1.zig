@@ -46,9 +46,48 @@ fn getBetValue(str: []const u8) u32 {
 }
 
 fn getHandType(cards: [5]u8) HandType {
-    _ = cards;
+    var sorted: [5]u8 = cards;
 
-    return HandType.high_card;
+    for (cards, 0..) |num, index| {
+        sorted[index] = cardValue(num);
+    }
+    std.sort.insertion(u8, &sorted, {}, std.sort.asc(u8));
+
+    var count: [5]u8 = undefined;
+    @memset(&count, 0);
+    count[0] = 1;
+    var i: u8 = 0;
+    for (sorted, 0..) |num, index| {
+        if (index == 4) {
+            break;
+        }
+        if (num == sorted[index + 1]) {
+            count[i] += 1;
+        } else {
+            if (count[i] == 0) {
+                count[i] += 1;
+            }
+            i += 1;
+            count[i] += 1;
+        }
+    }
+    std.sort.insertion(u8, &count, {}, std.sort.desc(u8));
+
+    if (std.meta.eql(count, [5]u8{ 5, 0, 0, 0, 0 })) {
+        return HandType.five_kind;
+    } else if (std.meta.eql(count, [5]u8{ 4, 1, 0, 0, 0 })) {
+        return HandType.four_kind;
+    } else if (std.meta.eql(count, [5]u8{ 3, 2, 0, 0, 0 })) {
+        return HandType.full_house;
+    } else if (std.meta.eql(count, [5]u8{ 3, 1, 1, 0, 0 })) {
+        return HandType.three_kind;
+    } else if (std.meta.eql(count, [5]u8{ 2, 2, 1, 0, 0 })) {
+        return HandType.two_pair;
+    } else if (std.meta.eql(count, [5]u8{ 2, 1, 1, 1, 0 })) {
+        return HandType.two_pair;
+    } else {
+        return HandType.high_card;
+    }
 }
 
 fn getHandValue(cards: [5]u8) u32 {
@@ -77,7 +116,7 @@ fn cardValue(card: u8) u8 {
 
 fn cmpHandByScore(context: void, a: Hand, b: Hand) bool {
     _ = context;
-    if (a.score > b.score) {
+    if (a.score < b.score) {
         return true;
     } else {
         return false;
@@ -106,9 +145,9 @@ fn getWinnings(readDemo: bool) !u64 {
     std.sort.insertion(Hand, x, {}, cmpHandByScore);
 
     for (x, 0..) |item, index| {
+        std.debug.print("{d} {s} {d}\n", .{ item.score, item.cards, item.bet });
         winnings += (item.bet * (index + 1));
     }
-
     std.debug.print("winnings: {d}\n", .{winnings});
     return winnings;
 }
