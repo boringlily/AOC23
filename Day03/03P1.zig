@@ -5,16 +5,20 @@ const arrayList = std.ArrayList;
 const demo_file = @embedFile("demo.txt");
 const input_file = @embedFile("input.txt");
 
-pub fn parseLine(str: []const u8) !u64 {
-    _ = str;
-    return 0;
+const input_type = enum { num, sym };
+const PartNumber = struct {
+
+
 }
 
 fn solve(file: []const u8) !u64 {
     var readIter = std.mem.tokenize(u8, file, "\n");
     var sum: u64 = 0;
     while (readIter.next()) |line| {
-        sum += try parseLine(line);
+        for (line, 0..) |c, i| {
+            std.debug.print("\n{d} -- {c}", .{ i, c });
+        }
+        std.debug.print("\n ", .{});
     }
     std.debug.print("\nSum of possible games: {d}\n", .{sum});
 
